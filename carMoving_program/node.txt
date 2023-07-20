@@ -1,0 +1,98 @@
+//在keil内编辑并烧写到52单片机
+#include<reg52.h>
+
+#define uchar unsigned char
+#define uint  unsigned int
+
+sbit LB=P0^0;	//左边马达下接口 	out2
+sbit LF=P0^1;	//左上		out1
+sbit RB=P0^2;	//右下		out4
+sbit RF=P0^3;	//右上		out3
+
+ void stop()
+{
+	LF=0;
+	LB=0;
+	RF=0;
+	RB=0;
+}
+
+void forward()
+{
+	LF=1;
+	LB=0;
+	RF=1;
+	RB=0;	  
+}
+
+void back()
+{
+	LF=0;
+	LB=1;
+	RF=0;
+	RB=1;	
+}
+
+void left()
+{
+	LF=0;
+	LB=1;
+	RF=1;
+	RB=0;
+}
+
+void right()
+{
+	LF=1;
+	LB=0;
+	RF=0;
+	RB=1;
+	
+}
+void Com_Int(void) interrupt 4
+{
+	uchar receive_data;	
+	EA = 0;
+	if(RI == 1) 
+	{ 
+		RI=0; 
+		LF=0;
+		RF=0;
+		LB=0;
+		RB=0;
+		receive_data = SBUF;
+		switch(receive_data)
+		{
+			case ('1'):
+				forward();break;
+			case ('2'):
+				back();break;
+			case ('3'):
+				left();break;
+			case ('4'):
+				right();break;
+			case ('0'):
+				stop();break;
+		}			
+	}		
+		EA = 1;
+}
+	
+void UsartConfiguration()
+{	
+	SCON=0X50;	//SCON 是一个特殊功能寄存器，用以设定串行口的工作方式、接收/发送控制以及设置状态标志		
+	TMOD=0X20;			
+	PCON=0X00;		
+	TH1=0Xfd;		    
+	TL1=0Xfd; //波特率为9600算出来的fd
+	TR1= 1;					
+	ES = 1;        
+    	EA = 1;         
+}
+
+
+void main()
+{
+	UsartConfiguration();	
+	while(1);	
+}
